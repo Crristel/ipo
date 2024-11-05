@@ -1,0 +1,144 @@
+#include "framework.h"
+#include "WindowsProject1.h"
+#include "windows.h"
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    WNDCLASS wc = { 0 };
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = L"SampleWindowClass";
+    RegisterClass(&wc);
+
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    int windowWidth = 900;
+    int windowHeight = 900;
+    int x = (screenWidth - windowWidth) / 2;
+    int y = (screenHeight - windowHeight) / 2;
+
+    HWND hwnd = CreateWindowEx(
+        0,
+        L"SampleWindowClass",
+        L"Sample Window",
+        WS_OVERLAPPEDWINDOW,
+        x, // x - координата для центра экрана
+        y, // y - координата для центра экрана
+        windowWidth, windowHeight,
+        NULL,
+        NULL,
+        hInstance,
+        NULL
+    );
+
+    if (hwnd == NULL) {
+        return 0;
+    }
+
+    ShowWindow(hwnd, nCmdShow);
+
+    MSG msg = { 0 };
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return 0;
+}
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    static int clickCount = 0;
+    static HWND hwndChild1 = NULL;
+    static HWND hwndChild2 = NULL;
+    static HWND hwndChild3 = NULL;
+
+    switch (uMsg) {
+    case WM_LBUTTONDOWN:
+        if (clickCount == 0) {
+            hwndChild1 = CreateWindowEx(
+                0,
+                L"SampleWindowClass",
+                L"Child Window 1",
+                WS_OVERLAPPEDWINDOW,
+                650, 250, 600, 600,  //  Добавление координат
+                hwnd,
+                NULL,
+                (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+                NULL
+            );
+            ShowWindow(hwndChild1, SW_SHOW);
+            clickCount++;
+        }
+        else if (clickCount == 1) {
+            hwndChild2 = CreateWindowEx(
+                0,
+                L"SampleWindowClass",
+                L"Child Window 2",
+                WS_OVERLAPPEDWINDOW,
+                725, 380, 460, 350,  //  Добавление координат
+                hwndChild1,
+                NULL,
+                (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+                NULL
+            );
+            ShowWindow(hwndChild2, SW_SHOW);
+            clickCount++;
+        }
+        else if (clickCount == 2) {
+            hwndChild3 = CreateWindowEx(
+                0,
+                L"SampleWindowClass",
+                L"Child Window 3",
+                WS_OVERLAPPEDWINDOW,
+                800, 450, 300, 200,  //  Добавление координат
+                hwndChild2,
+                NULL,
+                (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+                NULL
+            );
+            ShowWindow(hwndChild3, SW_SHOW);
+            clickCount++;
+        }
+        break;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        HBRUSH hBrush;
+        HPEN hPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0)); // Черная рамка
+        SelectObject(hdc, hPen);
+
+        if (hwnd == hwndChild2) {
+            hBrush = CreateSolidBrush(RGB(0, 255, 0)); // зел
+
+        }
+
+        if (hwnd == hwndChild1) {
+            hBrush = CreateSolidBrush(RGB(0, 255, 0)); // Зеленый
+        }
+        else if (hwnd == hwndChild2) {
+            hBrush = CreateSolidBrush(RGB(255, 255, 0)); // желтый
+        }
+        else if (hwnd == hwndChild3) {
+            hBrush = CreateSolidBrush(RGB(192, 192, 192)); // серый
+        }
+        else {
+            hBrush = CreateSolidBrush(RGB(255, 255, 255)); // Белый для основного окна
+        }
+
+        SelectObject(hdc, hBrush);
+        Rectangle(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom);
+
+        DeleteObject(hBrush);
+        DeleteObject(hPen);
+        EndPaint(hwnd, &ps);
+    }
+    break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+gjkbyt !
