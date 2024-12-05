@@ -1,0 +1,1 @@
+# def intersectionAreaMultiRect(list):
